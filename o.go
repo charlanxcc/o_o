@@ -88,7 +88,7 @@ func (o *O) N(ix int, name string) {
 		f := runtime.FuncForPC(pc[0])
 		fn, l := f.FileLine(pc[0])
 
-		points[i].fun = fmt.Println("%s:%s", path.Base(fn), path.Base(f.Name()))
+		points[i].fun = fmt.Sprintf("%s:%s", path.Base(fn), path.Base(f.Name()))
 		points[i].line = l
 		if ix == 0 && name == "" {
 			points[i].name = points[i].fun
@@ -167,7 +167,7 @@ func (o *O) Summary() string {
 }
 
 func FuncInfo(pc uintptr) (name, file string, line int) {
-	fp := runtime.FuncForPc(pc)
+	fp := runtime.FuncForPC(pc)
 	fn, l := fp.FileLine(pc)
 	return fp.Name(), fn, l
 }
