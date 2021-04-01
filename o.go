@@ -169,7 +169,7 @@ func (o *O) Summary() string {
 func FuncInfo(pc uintptr) (name, file string, line int) {
 	fp := runtime.FuncForPc(pc)
 	fn, l := fp.FileLine(pc)
-	return fp.Name(), fn, l)
+	return fp.Name(), fn, l
 }
 
 func CallStack(skip, depth int) string {
