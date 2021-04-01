@@ -2,11 +2,11 @@
  * Usage:
  * import "o_o"
  *
- * o := o_o.Begin(100); defer o.End()
+ * ;;; o := o_o.B(100); defer o.E()		<=>	// o.o=100
  *
- * o.Mark(1)
- * o.Mark0(2, "random name")
- * o.End()
+ * ;;; o.M(1)								<=> // o.o 1
+ * ;;; o.N(2, "random name")				<=> // o.o 2 random name
+ * o.E()
  *
  * To reset:
  * o_o.Reset()
@@ -45,7 +45,7 @@ var Enabled bool = false
 var points []point = make([]point, size, size)
 var dummy_o *O = &O{ 0, time.Now(), time.Now() }
 
-func Begin(six int) *O {
+func B(six int) *O {
 	if !Enabled {
 		return dummy_o
 	}
@@ -69,7 +69,7 @@ func Begin(six int) *O {
 	}
 }
 
-func (o *O) Mark0(ix int, name string) {
+func (o *O) N(ix int, name string) {
 	if !Enabled {
 		return
 	}
@@ -86,9 +86,9 @@ func (o *O) Mark0(ix int, name string) {
 		pc := make([]uintptr, 1)
 		runtime.Callers(skip, pc)
 		f := runtime.FuncForPC(pc[0])
-		_, l := f.FileLine(pc[0])
+		fn, l := f.FileLine(pc[0])
 
-		points[i].fun = path.Base(f.Name())
+		points[i].fun = fmt.Println("%s:%s", path.Base(fn), path.Base(f.Name()))
 		points[i].line = l
 		if ix == 0 && name == "" {
 			points[i].name = points[i].fun
@@ -105,18 +105,18 @@ func (o *O) Mark0(ix int, name string) {
 	}
 }
 
-func (o *O) Mark(ix int) {
+func (o *O) M(ix int) {
 	if !Enabled {
 		return
 	}
-	o.Mark0(ix, "")
+	o.N(ix, "")
 }
 
-func (o *O) End() {
+func (o *O) E() {
 	if !Enabled {
 		return
 	}
-	o.Mark0(0, "")
+	o.N(0, "")
 }
 
 func Reset() {
@@ -164,6 +164,12 @@ func Summary() string {
 
 func (o *O) Summary() string {
 	return Summary()
+}
+
+func FuncInfo(pc uintptr) (name, file string, line int) {
+	fp := runtime.FuncForPc(pc)
+	fn, l := fp.FileLine(pc)
+	return fp.Name(), fn, l)
 }
 
 func CallStack(skip, depth int) string {
