@@ -196,7 +196,6 @@ Examples:
         fin = '-'
     if fout is None:
         fout = fin
-    print(dir, fin, fout)
     o_o(fin, fout, dir)
 
 # EOF
