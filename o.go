@@ -1,12 +1,14 @@
-/* simple profiler
+/* simple profiler // o.d
+ *
  * Usage:
  * import "o_o"
  *
- * ;;; o := o_o.B(100); defer o.E()		<=>	// o.o=100
+ * ; import "github.com/charlanxcc/o_o"	// o.i 1000  <=> // o.o import 1000
+ * ;;; O__o := o_o.B(100); defer O__o.E(); O__o.M(1) <=> // o.b
  *
- * ;;; o.M(1)								<=> // o.o 1
- * ;;; o.N(2, "random name")				<=> // o.o 2 random name
- * o.E()
+ * ;;; o.M(1)                                        <=> // o.o
+ * ;;; o.N(2, "random-name")                         <=> // o.o random-name
+ * ;;; o.E()                                         <=> // o.e
  *
  * To reset:
  * o_o.Reset()
@@ -22,28 +24,29 @@ import (
 	"fmt"
 	"path"
 	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 )
 
 type point struct {
-	name	string		/* title of the line */
-	fun		string		/* file base name */
-	line	int
-	count	int64
-	et		int64
+	name  string /* title of the line */
+	fun   string /* file base name */
+	line  int
+	count int64
+	et    int64
 }
 
 type O struct {
-	func_ix int			/* function begin index */
-	st		time.Time	/* function start time */
-	ot		time.Time	/* last time */
+	func_ix int       /* function begin index */
+	st      time.Time /* function start time */
+	ot      time.Time /* last time */
 }
 
 var size int = 4096
 var Enabled bool = false
 var points []point = make([]point, size, size)
-var dummy_o *O = &O{ 0, time.Now(), time.Now() }
+var dummy_o *O = &O{0, time.Now(), time.Now()}
 
 func B(six int) *O {
 	if !Enabled {
@@ -53,19 +56,18 @@ func B(six int) *O {
 	if points[six].fun == "" {
 		pc := make([]uintptr, 1)
 		runtime.Callers(2, pc)
-		f := runtime.FuncForPC(pc[0])
-		_, l := f.FileLine(pc[0])
 
-		points[six].name = path.Base(f.Name())
-		points[six].fun = points[six].name
+		n, f, l := FuncInfo(pc[0])
+		points[six].name = path.Base(n)
+		points[six].fun = fmt.Sprintf("%s@%s", path.Base(n), path.Base(f))
 		points[six].line = l
 	}
 
-	now := time.Now();
+	now := time.Now()
 	return &O{
 		func_ix: six,
-		st: now,
-		ot: now,
+		st:      now,
+		ot:      now,
 	}
 }
 
@@ -85,10 +87,8 @@ func (o *O) N(ix int, name string) {
 
 		pc := make([]uintptr, 1)
 		runtime.Callers(skip, pc)
-		f := runtime.FuncForPC(pc[0])
-		fn, l := f.FileLine(pc[0])
-
-		points[i].fun = fmt.Sprintf("%s:%s", path.Base(fn), path.Base(f.Name()))
+		n, f, l := FuncInfo(pc[0])
+		points[i].fun = fmt.Sprintf("%s@%s", path.Base(n), path.Base(f))
 		points[i].line = l
 		if ix == 0 && name == "" {
 			points[i].name = points[i].fun
@@ -132,38 +132,46 @@ func Reset() {
 	}
 }
 
-func Summary() string {
+// msCutoff is cut off time in millisecond
+func Summary(msCutoff int64) string {
 	if !Enabled {
 		return ""
 	}
 
 	var out bytes.Buffer
-	out.WriteString("*** Benchmark summary\n")
+	out.WriteString("*** Benchmark summary: (index: name count time/op total-time func@file:line)\n")
 
 	for i, x := range points {
 		if x.count == 0 {
 			continue
 		}
+		if msCutoff > 0 && x.et/1000000 < msCutoff {
+			continue
+		}
 
 		var indent, name string = "", "........"
-		if x.name != x.fun {
-			indent = "  "
-		}
-		if x.name != "" {
+		if x.name != "" && strings.Contains(x.fun, x.name+"@") {
+			// function
 			name = x.name
+		} else {
+			indent = "  "
+			if x.name != "" {
+				name = x.name
+			}
+			name = (name + "        ")[:8]
 		}
 		out.WriteString(fmt.Sprintf(
-			"  %d: %s%s: %d %.1f us/ %.3f s  %s:%d\n",
+			"%4d: %s%s: %d %.1f us/ %.3f s  %s:%d\n",
 			i, indent, name, x.count,
-			float64(x.et) / float64(x.count) / float64(1000),
-			float64(x.et) / float64(1000000000),
-			x.fun, x.line));
+			float64(x.et)/float64(x.count)/float64(1000),
+			float64(x.et)/float64(1000000000),
+			x.fun, x.line))
 	}
 	return out.String()
 }
 
-func (o *O) Summary() string {
-	return Summary()
+func (o *O) Summary(msCutoff int64) string {
+	return Summary(msCutoff)
 }
 
 func FuncInfo(pc uintptr) (name, file string, line int) {
@@ -174,12 +182,12 @@ func FuncInfo(pc uintptr) (name, file string, line int) {
 
 func CallStack(skip, depth int) string {
 	skip++
-	if (skip < 1) {
+	if skip < 1 {
 		skip = 1
 	}
-	if (depth < 2) {
+	if depth < 2 {
 		depth = 2
-	} else if (depth > 100) {
+	} else if depth > 100 {
 		depth = 100
 	}
 	pc := make([]uintptr, depth)
