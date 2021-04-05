@@ -13,9 +13,9 @@ r_begin_code = re.compile(r'^.*?(\s*;+\s*O__o\s*:=\s*o_o\.B\(.*)$')
 r_end_anno = re.compile(r'^.*?(\s*//\s*o\.e.*)$')
 r_end_code = re.compile(r'^.*?(\s*;+\s*O__o\.E\(\).*)$')
 r_mark_anno = re.compile(r'^.*?(\s*//\s*o\.o.*)$')
-r_mark_code = re.compile(r'^.*?(\s*;+\s*O__o\.M\((\d+)\).*)$')
-r_name_anno = re.compile(r'^.*?(\s*//\s*o\.o\s+(\w+).*)$')
-r_name_code = re.compile(r'^.*?(\s*;+\s*O__o\.N\(\d+\s*,\s*"(\w+)"\).*)$')
+r_mark_code = re.compile(r'^.*?(\s*;+\s*[O_o]+\.M\((\d+)\).*)$')
+r_name_anno = re.compile(r'^.*?(\s*//\s*o\.o\s+([-0-9a-zA-Z_]+).*)$')
+r_name_code = re.compile(r'^.*?(\s*;+\s*[O_o]+\.N\(\d+\s*,\s*"([^"]+)"\).*)$')
 
 # toggle between annotation <=> code
 #
