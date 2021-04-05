@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync/atomic"
@@ -178,6 +179,11 @@ func FuncInfo(pc uintptr) (name, file string, line int) {
 	fp := runtime.FuncForPC(pc)
 	fn, l := fp.FileLine(pc)
 	return fp.Name(), fn, l
+}
+
+// from function pointer
+func FuncInfo2(ptr interface{}) (name, file string, line int) {
+	return FuncInfo(reflect.ValueOf(ptr).Pointer())
 }
 
 func CallStack(skip, depth int) string {
