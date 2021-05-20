@@ -22,7 +22,7 @@ r_name_code = re.compile(r'^.*?(\s*;+\s*[O_o]+\.N\(\d+\s*,\s*"([^"]+)"\).*)$')
 # ; import "gibhub.com/charlanxcc/o_o" // o.i 1000  <=> // o.i 1000
 # ;;; O__o := o_o.B(100); defer O__o.E(); O__o.M(1) <=> // o.b
 # ;;; O__o.M(1)                                     <=> // o.o
-# ;;; O__o.N(2, "random name")                      <=> // o.o random name
+# ;;; O__o.N(2, "random-name")                      <=> // o.o random-name
 # ;;; O__o.E()                                      <=> // o.e
 def o_o(fin, fout, dir=0):
     out = io.BytesIO()
@@ -171,13 +171,13 @@ def o_o(fin, fout, dir=0):
         f.close()
 
 if __name__ == "__main__":
-    fin, fout, dir = None, None, 0
+    fn, dir = None, 0
     for i in sys.argv[1:]:
         if i == "-a":
             dir = 2
         elif i == "-c":
             dir = 1
-        elif i == "-h" or (len(i) > 1 and i[1:] == "-"):
+        elif i == "-h" or (len(i) > 1 and i[:1] == "-"):
             print("""Usage: o_o.py [-a|-c|-h] [<src.go> [<dst.go>]]
 
 Examples:
@@ -188,14 +188,11 @@ Examples:
   - in-place annotation to code
   o_o.py -c abc.go""")
             exit(0)
-        elif fin is None:
-            fin = i
-        elif fout is None:
-            fout = i
-    if fin is None:
-        fin = '-'
-    if fout is None:
-        fout = fin
-    o_o(fin, fout, dir)
+        else:
+            fn = i
+            o_o(fn, fn, dir)
+    if fn is None:
+        fn = '-'
+        o_o(fn, fn, dir)
 
 # EOF
